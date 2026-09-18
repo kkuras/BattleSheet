@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-sm">
+        <Link href="/" className="text-sm text-[#8b93a7]">
+          ← Voltar
+        </Link>
+
+        
+
         <h1>Entrar no BattleSheet</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col items-start gap-4">
