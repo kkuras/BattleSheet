@@ -5,8 +5,12 @@ export default function Home() {
     <div>
       <h1>BattleSheet</h1>
       <Link href="/login">
-        <button>Entrar</button>
+        <button className="bg-[#f3c642] text-[#0a0e17] px-4 py-2 rounded font-semibold">
+          Entrar
+          </button>
       </Link>
+
+      <h2>como coco</h2>
     </div>
   );
 }
