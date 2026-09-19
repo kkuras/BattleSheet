@@ -20,8 +20,6 @@ export default function LoginPage() {
           ← Voltar
         </Link>
 
-        
-
         <h1>Entrar no BattleSheet</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col items-start gap-4">
