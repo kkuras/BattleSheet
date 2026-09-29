@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚡ BattleSheet
 
-## Getting Started
+[![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow.svg)]()
+[![Licença](https://img.shields.io/badge/Licença-Todos%20os%20Direitos%20Reservados-red.svg)]()
+[![Plataforma](https://img.shields.io/badge/Plataforma-Cobblemon%20VGC-blue.svg)]()
 
-First, run the development server:
+> Plataforma de gestão de torneios de Pokémon VGC, com Team Builder livre, validação por Rulesets customizados em JSON e Open Team Sheets públicas.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📋 Sobre o Projeto
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+O **BattleSheet** é um web app criado para organizar e gerir campeonatos de Pokémon VGC customizados jogados no mod **Cobblemon**. 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O sistema separa a criação livre de equipas da inscrição oficial em torneios. Os jogadores têm total liberdade para montar e testar equipas no **Team Builder**, enquanto o sistema aplica validações automáticas baseadas em **Rulesets customizados** de 3 camadas em JSON no momento do registo do torneio.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## ✨ Funcionalidades Principais
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 🧰 **Team Builder Livre:** Suporte a criação de múltiplas equipas sem restrições prévias, com suporte a *Import/Export* no formato padrão do Pokémon Showdown.
+- 📜 **Open Team Sheet Pública:** Exibição pública e limpa das equipas registradas nos torneios (mostrando apenas Pokémon, Itens e Moves, mantendo segredo sobre EVs, IVs, Natures e Abilities).
+- ⚙️ **Sistema de Rulesets em 3 Camadas:** Validação dinâmica via JSON de categorias (Restricted, Sub-Legendaries, Paradox, Starters) e mecânicas/gimmicks (Mega Evoluções, Z-Moves, Primal, Terastallization).
+- 🔒 **Controlo de Alterações e Versionamento:** Alterações feitas em equipas já inscritas exigem aprovação do Admin antes de entrarem na Open Team Sheet oficial.
+- 🏆 **Mata-Mata e Brackets:** Gestão visual de chaveamento de torneios (Single Elimination) e registo de partidas.
+- 🛡️ **Suporte a Assets Customizados:** Tratamento de itens/sprites exclusivos do Cobblemon com ícones *placeholder* automáticos para links com erro 404.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Tecnologias Utilizadas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Frontend:** Next.js (React), TypeScript, Tailwind CSS
+- **Backend & Banco de Dados:** Supabase (PostgreSQL & Auth)
+- **Hospedagem & Deploy:** Vercel
+- **Dados:** PokéAPI + Arquivos JSON locais / Banco de Dados Supabase
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📄 Licença
+
+© **BattleSheet**. Todos os direitos reservados.
+
+Nenhuma parte deste projeto (código-fonte, design, recursos visuais ou documentação) pode ser copiada, modificada, distribuída ou utilizada sem autorização prévia por escrito do detentor dos direitos autorais.
