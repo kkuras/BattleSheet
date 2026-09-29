@@ -4,7 +4,7 @@
 [![Licença](https://img.shields.io/badge/Licença-Todos%20os%20Direitos%20Reservados-red.svg)]()
 [![Plataforma](https://img.shields.io/badge/Plataforma-Cobblemon%20VGC-blue.svg)]()
 
-> Plataforma de gestão de torneios de Pokémon VGC para Cobblemon, com Team Builder livre, validação por Rulesets customizados em JSON e Open Team Sheets públicas.
+> Plataforma de gestão de torneios de Pokémon VGC, com Team Builder livre, validação por Rulesets customizados em JSON e Open Team Sheets públicas.
 
 ---
 
