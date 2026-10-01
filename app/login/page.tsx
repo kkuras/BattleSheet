@@ -1,45 +1,75 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 
+type FieldErrors = {
+  username?: string;
+  email?: string;
+  password?: string;
+};
+
 export default function LoginPage() {
+
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const aviso = searchParams.get("aviso");
   const supabase = createClient();
+
+  function validate(): FieldErrors {
+    const errors: FieldErrors = {};
+
+    if (mode === "signup" && username.trim().length < 3) {
+      errors.username = "O nome de usuário precisa ter pelo menos 3 caracteres.";
+    }
+
+    if (!email.includes("@") || !email.includes(".")) {
+      errors.email = "Digite um e-mail válido.";
+    }
+
+    if (password.length < 6) {
+      errors.password = "A senha precisa ter pelo menos 6 caracteres.";
+    }
+
+    return errors;
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError("");
+    setFormError("");
+
+    const errors = validate();
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
     setLoading(true);
 
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        setError(error.message);
+        setFormError(error.message);
         setLoading(false);
         return;
       }
     } else {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const { data, error } = await supabase.auth.signUp({ email, password });
 
       if (error) {
-        setError(error.message);
+        setFormError(error.message);
         setLoading(false);
         return;
       }
@@ -50,84 +80,121 @@ export default function LoginPage() {
           .insert({ id: data.user.id, username });
 
         if (profileError) {
-          setError(profileError.message);
+          setFormError(profileError.message);
           setLoading(false);
           return;
         }
       }
     }
 
-    router.push("/dashboard");
+    router.push("/times");
+    router.refresh();
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-sm">
-        <div className="flex bg-[#1b2438] rounded-lg p-1 mb-8">
+    <div className="flex-1 flex items-center justify-center px-4 py-20">
+      <div className="w-full max-w-sm border border-[#3a3846] rounded-xl p-6 bg-[#2c2a38]">
+        <Link href="/" className="text-sm text-[#8b93a7]">
+          ← Voltar
+        </Link>
+
+        <div className="flex bg-[#1b2438] rounded-lg p-1 mb-4 mt-4">
           <button
             type="button"
             onClick={() => setMode("login")}
             className={`flex-1 py-2 rounded-md text-sm font-semibold transition-all ${
-              mode === "login"
-                ? "bg-[#f3c642] text-[#0a0e17]"
-                : "text-[#8b93a7]"
-            }`}>
+              mode === "login" ? "bg-[#f3c642] text-[#0a0e17]" : "text-[#8b93a7]"
+            }`}
+          >
             Entrar
           </button>
           <button
             type="button"
             onClick={() => setMode("signup")}
             className={`flex-1 py-2 rounded-md text-sm font-semibold transition-all ${
-              mode === "signup"
-                ? "bg-[#f3c642] text-[#0a0e17]"
-                : "text-[#8b93a7]"
-            }`}>
+              mode === "signup" ? "bg-[#f3c642] text-[#0a0e17]" : "text-[#8b93a7]"
+            }`}
+          >
             Criar conta
           </button>
         </div>
 
+        {(aviso === "protegido" || formError) && (
+          <div className="mb-4 animate-[fadeIn_0.2s_ease-in]">
+            {aviso === "protegido" && !formError && (
+              <p className="text-sm text-[#fb923c] bg-[#fb923c]/10 border border-[#fb923c]/30 rounded px-3 py-2">
+                Faça login ou crie uma conta para acessar seus times.
+              </p>
+            )}
+            {formError && (
+              <p className="text-sm text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/30 rounded px-3 py-2">
+                {formError}
+              </p>
+            )}
+          </div>
+        )}
+
         <h1>{mode === "login" ? "Entrar no BattleSheet" : "Criar conta"}</h1>
 
-        <form onSubmit={handleSubmit} className="flex flex-col items-start gap-4 mt-4">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col items-start gap-4 mt-4">
           {mode === "signup" && (
-            <div>
-              <label className="block text-xl text-[#8b93a7]">Username</label>
+            <div className="w-full">
+              <label className="block text-sm text-[#8b93a7] mb-1">Nome de usuário</label>
               <input
                 type="text"
-                required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-[#0a0e17] border border-[#232b3d] rounded px-3 py-2 text-[#e8eaed] focus:outline-none focus:border-[#f3c642]"/>
+                className={`w-full bg-[#0a0e17] border rounded px-3 py-2 text-[#e8eaed] focus:outline-none ${
+                  fieldErrors.username
+                    ? "border-[#f87171] focus:border-[#f87171]"
+                    : "border-[#232b3d] focus:border-[#f3c642]"
+                }`}
+              />
+              {fieldErrors.username && (
+                <p className="text-xs text-[#f87171] mt-1">{fieldErrors.username}</p>
+              )}
             </div>
           )}
 
-          <div>
-            <label className="block text-xl text-[#8b93a7]">E-mail</label>
+          <div className="w-full">
+            <label className="block text-sm text-[#8b93a7] mb-1">E-mail</label>
             <input
               type="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#0a0e17] border border-[#232b3d] rounded px-3 py-2 text-[#e8eaed] focus:outline-none focus:border-[#f3c642]"/>
+              className={`w-full bg-[#0a0e17] border rounded px-3 py-2 text-[#e8eaed] focus:outline-none ${
+                fieldErrors.email
+                  ? "border-[#f87171] focus:border-[#f87171]"
+                  : "border-[#232b3d] focus:border-[#f3c642]"
+              }`}
+            />
+            {fieldErrors.email && (
+              <p className="text-xs text-[#f87171] mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
-          <div>
-            <label className="block text-xl text-[#8b93a7]">Senha</label>
+          <div className="w-full">
+            <label className="block text-sm text-[#8b93a7] mb-1">Senha</label>
             <input
               type="password"
-              required
-              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#0a0e17] border border-[#232b3d] rounded px-3 py-2 text-[#e8eaed] focus:outline-none focus:border-[#f3c642]"/>
+              className={`w-full bg-[#0a0e17] border rounded px-3 py-2 text-[#e8eaed] focus:outline-none ${
+                fieldErrors.password
+                  ? "border-[#f87171] focus:border-[#f87171]"
+                  : "border-[#232b3d] focus:border-[#f3c642]"
+              }`}
+            />
+            {fieldErrors.password && (
+              <p className="text-xs text-[#f87171] mt-1">{fieldErrors.password}</p>
+            )}
           </div>
-
-          {error && <p className="text-[#f87171] text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 bg-[#f3c642] text-[#0a0e17] font-semibold rounded px-3 py-2">
+            className="mt-2 bg-[#f3c642] text-[#0a0e17] font-semibold rounded px-3 py-2"
+          >
             {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
           </button>
         </form>
