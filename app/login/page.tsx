@@ -88,11 +88,12 @@ export default function LoginPage() {
     }
 
     router.push("/times");
+    router.refresh();
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-sm">
+    <div className="flex-1 flex items-center justify-center px-4 py-20">
+      <div className="w-full max-w-sm border border-[#3a3846] rounded-xl p-6 bg-[#2c2a38]">
         <Link href="/" className="text-sm text-[#8b93a7]">
           ← Voltar
         </Link>
@@ -118,9 +119,9 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {(aviso === "times" || formError) && (
+        {(aviso === "protegido" || formError) && (
           <div className="mb-4 animate-[fadeIn_0.2s_ease-in]">
-            {aviso === "times" && !formError && (
+            {aviso === "protegido" && !formError && (
               <p className="text-sm text-[#fb923c] bg-[#fb923c]/10 border border-[#fb923c]/30 rounded px-3 py-2">
                 Faça login ou crie uma conta para acessar seus times.
               </p>

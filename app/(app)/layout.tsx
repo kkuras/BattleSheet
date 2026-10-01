@@ -14,7 +14,7 @@ export default async function AppLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/login?aviso=protegido");
   }
 
   return (

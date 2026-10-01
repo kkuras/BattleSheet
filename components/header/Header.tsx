@@ -15,7 +15,7 @@ export default async function Header() {
           <Link href="/" className="font-bold text-[#f3c642]">
             BattleSheet
           </Link>
-          <Link href="/login?aviso=times" className="text-sm text-[#8b93a7]">
+          <Link href="/times" className="text-sm text-[#8b93a7]">
             Meus Times
           </Link>
         </div>
