@@ -92,8 +92,9 @@ export default function LoginPage() {
   }
 
   return (
+    
     <div className="flex-1 flex items-center justify-center px-4 py-20">
-      <div className="w-full max-w-sm border border-[#3a3846] rounded-xl p-6 bg-[#2c2a38]">
+      <div className="w-full max-w-sm border border-[#3a3846] rounded-xl p-6 bg-[#23212c]/20 backdrop-blur-md">
         <Link href="/" className="text-sm text-[#8b93a7]">
           ← Voltar
         </Link>
@@ -104,8 +105,7 @@ export default function LoginPage() {
             onClick={() => setMode("login")}
             className={`flex-1 py-2 rounded-md text-sm font-semibold transition-all ${
               mode === "login" ? "bg-[#f3c642] text-[#0a0e17]" : "text-[#8b93a7]"
-            }`}
-          >
+            }`}>
             Entrar
           </button>
           <button
@@ -113,8 +113,7 @@ export default function LoginPage() {
             onClick={() => setMode("signup")}
             className={`flex-1 py-2 rounded-md text-sm font-semibold transition-all ${
               mode === "signup" ? "bg-[#f3c642] text-[#0a0e17]" : "text-[#8b93a7]"
-            }`}
-          >
+            }`}>
             Criar conta
           </button>
         </div>
@@ -193,8 +192,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 bg-[#f3c642] text-[#0a0e17] font-semibold rounded px-3 py-2"
-          >
+            className="mt-2 bg-[#f3c642] text-[#0a0e17] font-semibold rounded px-3 py-2">
             {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
           </button>
         </form>

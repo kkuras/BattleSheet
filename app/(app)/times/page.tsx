@@ -1,4 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
+import TeamCard from "@/components/teamCard/teamCard";
+import Link from "next/link";
 
 export default async function TimesPage() {
   const supabase = await createClient();
@@ -16,19 +18,15 @@ export default async function TimesPage() {
     <div>
       <h1>Meus Times</h1>
 
-      {teams && teams.length > 0 ? (
-        <ul className="flex flex-col gap-2 mt-4">
-          {teams.map((team) => (
-            <li key={team.id} className="border border-[#232b3d] rounded px-4 py-3">
-              {team.name}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-sm text-[#8b93a7] mt-4">
-          Você ainda não criou nenhum time.
-        </p>
-      )}
+      <div className="grid grid-cols-3 gap-4 mt-6">
+        {teams?.map((team) => (
+          <TeamCard key={team.id} name={team.name} pokemonCount={0}/>
+        ))}
+
+        <Link href="/times/novo" className="border border-dashed border-[#3a3846] rounded-xl p-4 
+        flex items-center justify-center
+        text-[#8b93a7] hover:text-[#f3c642] hover:border-[#f3c642] transition-colors min-h-30"> + Criar Novo Time</Link>
+      </div>
     </div>
   );
 }
