@@ -8,6 +8,18 @@ export default async function Header() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let username: string | null = null;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+
+    username = profile?.username ?? null;
+  }
+
   return (
     <header className="border-b border-[#232b3d] px-6 py-4">
       <nav className="flex items-center justify-between">
@@ -20,7 +32,7 @@ export default async function Header() {
           </Link>
         </div>
 
-        <ProfileMenu email={user?.email ?? null} />
+        <ProfileMenu username={username} email={user?.email ?? null} />
       </nav>
     </header>
   );
