@@ -94,7 +94,7 @@ export default function LoginPage() {
   return (
     
     <div className="flex-1 flex items-center justify-center px-4 py-20">
-      <div className="w-full max-w-sm border border-[#3a3846] rounded-xl p-6 bg-[#23212c]/20 backdrop-blur-md">
+      <div className="w-full max-w-sm border border-[#3a3846] rounded-xl p-6 bg-white/5 backdrop-blur-md">
         <Link href="/" className="text-sm text-[#8b93a7]">
           ← Voltar
         </Link>
@@ -192,7 +192,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 bg-[#f3c642] text-[#0a0e17] font-semibold rounded px-3 py-2">
+            className="mt-2 bg-[#f3c642] text-[#0a0e17] font-semibold rounded px-3 py-2 flex items-center justify-center gap-2 disabled:opacity-70">
+            {loading && (
+              <span className="w-4 h-4 border-2 border-[#0a0e17]/30 border-t-[#0a0e17] rounded-full animate-spin" />)}
             {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
           </button>
         </form>
