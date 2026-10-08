@@ -66,7 +66,12 @@ export default function LoginPage() {
         return;
       }
     } else {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+        data: { username },
+        },  });
 
       if (error) {
         setFormError(error.message);
