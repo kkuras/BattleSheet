@@ -12,7 +12,8 @@ export default async function TimesPage() {
   const { data: teams } = await supabase
     .from("teams")
     .select("id, name")
-    .eq("user_id", user!.id);
+    .eq("user_id", user!.id)
+    .order("created_at", { ascending: true });
 
   return (
     <div>
@@ -20,7 +21,7 @@ export default async function TimesPage() {
 
       <div className="grid grid-cols-3 gap-4 mt-6">
         {teams?.map((team) => (
-          <TeamCard key={team.id} name={team.name} pokemonCount={0}/>
+          <TeamCard key={team.id} id={team.id} name={team.name} pokemonCount={0}/>
         ))}
 
         <Link href="/times/novo" className="border border-dashed border-[#3a3846] rounded-xl p-4 
