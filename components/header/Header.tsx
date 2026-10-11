@@ -21,7 +21,6 @@ export default async function Header() {
             Meus Times
           </Link>
         </div>
-
         <ProfileMenu username={username} email={user?.email ?? null} />
       </nav>
     </header>

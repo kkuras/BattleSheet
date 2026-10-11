@@ -24,9 +24,9 @@ export default async function TimesPage() {
           <TeamCard key={team.id} id={team.id} name={team.name} pokemonCount={0}/>
         ))}
 
-        <Link href="/times/novo" className="border border-dashed border-[#3a3846] rounded-xl p-4 
-        flex items-center justify-center
-        text-[#8b93a7] hover:text-[#f3c642] hover:border-[#f3c642] transition-colors min-h-30"> + Criar Novo Time</Link>
+        <Link href="/times/novo" className="self-start justify-self-start border border-dashed
+        border-[#3a3846] rounded-xl px-5 py-3 flex items-center gap-2 
+        text-sm text-[#8b93a7] hover:text-[#f3c642] hover:border-[#f3c642] transition-colors"> + Criar Novo Time</Link>
       </div>
     </div>
   );
