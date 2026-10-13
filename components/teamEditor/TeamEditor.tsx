@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { PokemonOption } from "@/lib/pokeapi";
 
 type SlotPokemon = {
     id: string;
@@ -10,9 +11,10 @@ type SlotPokemon = {
 
 type TeamEditorProps = {
     pokemons: SlotPokemon[];
+    pokemonOptions: PokemonOption[];
 }
 
-export default function TeamEditor({ pokemons }: TeamEditorProps) {
+export default function TeamEditor({ pokemons, pokemonOptions }: TeamEditorProps) {
     const [selectedSlot, setSelectedSlot] = useState(1);
 
     const selectedPokemon = pokemons.find((p) => p.slot === selectedSlot);
@@ -49,6 +51,10 @@ export default function TeamEditor({ pokemons }: TeamEditorProps) {
           {selectedPokemon
             ? `Editando ${selectedPokemon.species}`
             : "Nenhum Pokémon neste slot ainda."}
+        </p>
+
+        <p className="text-xs text-[#8b93a7] mt-4">
+          {pokemonOptions.length} Pokémon carregados da PokéAPI
         </p>
       </div>
     </div>

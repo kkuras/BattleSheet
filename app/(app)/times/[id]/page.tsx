@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getPokemonList } from "@/lib/pokeapi";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import TeamEditor from "@/components/teamEditor/TeamEditor";
@@ -27,6 +28,8 @@ export default async function TeamPage({
         .eq("team_id", team.id)
         .order("slot", { ascending: true });
 
+    const pokemonOptions = await getPokemonList();
+
 
     return (
         <div>
@@ -36,7 +39,7 @@ export default async function TeamPage({
 
             <h1 className="mt-4 text-4xl">{team.name}</h1>
 
-            <TeamEditor pokemons={pokemons ?? []}/>
+            <TeamEditor pokemons={pokemons ?? []} pokemonOptions={pokemonOptions} />
         </div>
     );
 }
