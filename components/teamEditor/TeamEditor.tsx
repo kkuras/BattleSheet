@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { PokemonOption } from "@/lib/pokeapi";
+import PokemonCombobox from "./PokemonCombobox";
 
 type SlotPokemon = {
     id: string;
@@ -18,6 +19,8 @@ export default function TeamEditor({ pokemons, pokemonOptions }: TeamEditorProps
     const [selectedSlot, setSelectedSlot] = useState(1);
 
     const selectedPokemon = pokemons.find((p) => p.slot === selectedSlot);
+
+    const [species, setSpecies] = useState("");
 
     return (
     <div className="grid grid-cols-[220px_1fr] gap-6 mt-6">
@@ -53,9 +56,12 @@ export default function TeamEditor({ pokemons, pokemonOptions }: TeamEditorProps
             : "Nenhum Pokémon neste slot ainda."}
         </p>
 
-        <p className="text-xs text-[#8b93a7] mt-4">
-          {pokemonOptions.length} Pokémon carregados da PokéAPI
-        </p>
+        <label className="block text-sm text-[#8b93a7] mt-4 mb-1">Pokémon</label>
+        <PokemonCombobox
+          options={pokemonOptions}
+          value={species}
+          onChange={setSpecies}
+        />
       </div>
     </div>
   );
