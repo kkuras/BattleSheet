@@ -22,7 +22,7 @@ export async function getPokemonList(): Promise<PokemonOption[]> {
         return {
             id,
             name: p.name,
-            sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png',
+            sprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
         };
     });
 }
