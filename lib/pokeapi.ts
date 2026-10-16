@@ -26,3 +26,8 @@ export async function getPokemonList(): Promise<PokemonOption[]> {
         };
     });
 }
+
+// Deixa o texto em minúsculo e troca hífen por espaço, para "mr mime" achar "mr-mime"
+export function normalizeName(text: string) {
+  return text.toLowerCase().replace(/-/g, " ").trim();
+}
