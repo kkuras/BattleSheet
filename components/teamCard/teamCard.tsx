@@ -4,13 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
+// Um slot do card: Pokémon com sprite (ou sem imagem), ou null se o slot está vazio
+type CardSlot = { species: string; sprite: string | null } | null;
+
 type TeamCardProps = {
   id: string;
   name: string;
-  pokemonCount: number;
+  slots: CardSlot[];
 };
 
-export default function TeamCard({ id, name, pokemonCount }: TeamCardProps) {
+export default function TeamCard({ id, name, slots }: TeamCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState(name);
@@ -129,13 +132,17 @@ export default function TeamCard({ id, name, pokemonCount }: TeamCardProps) {
         </div>
       </div>
 
+      {/* Grade 3x2 dos Pokémon do time: um quadrado por slot */}
       <div className="grid grid-cols-3 gap-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="aspect-square rounded bg-[#23212c] border border-[#3a3846] flex items-center justify-center text-xs text-[#8b93a7]"
-          >
-            {i < pokemonCount ? "?" : ""}
+        {slots.map((slot, i) => (
+          <div key={i} className="aspect-square flex items-center justify-center border-amber-100 border">
+            {slot?.sprite ? (
+              /* Sprite do Pokémon, preenchendo o quadrado */
+              <img src={slot.sprite} alt={slot.species} className="w-full h-full" />
+            ) : slot ? (
+              /* Pokémon sem imagem na lista (nome customizado) */
+              <span>?</span>
+            ) : null}
           </div>
         ))}
       </div>
