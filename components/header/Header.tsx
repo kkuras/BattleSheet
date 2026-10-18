@@ -8,17 +8,7 @@ export default async function Header() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let username: string | null = null;
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("username")
-      .eq("id", user.id)
-      .single();
-
-    username = profile?.username ?? null;
-  }
+  const username = user?.user_metadata?.username ?? null;
 
   return (
     <header className="border-b border-[#232b3d] px-6 py-4">
@@ -27,11 +17,10 @@ export default async function Header() {
           <Link href="/" className="font-bold text-[#f3c642]">
             BattleSheet
           </Link>
-          <Link href="/times" className="text-sm text-[#8b93a7]">
+          <Link href="/times" className="text-sm text-[#8b93a7] hover:text-[#f3c642]">
             Meus Times
           </Link>
         </div>
-
         <ProfileMenu username={username} email={user?.email ?? null} />
       </nav>
     </header>
