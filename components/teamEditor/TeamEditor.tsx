@@ -7,6 +7,10 @@ import type { PokemonOption } from "@/lib/pokeapi";
 import { NATURES, TERA_TYPES } from "@/lib/pokemonData";
 import PokemonCombobox from "./PokemonCombobox";
 
+// Estilo compartilhado dos campos (apelido, nature, tera type); o disabled: deixa o campo apagado
+const fieldClass =
+  "w-full bg-[#2c2a38] border border-[#4a4757] rounded px-3 py-2 text-[#e8eaed] focus:outline-none focus:border-[#f3c642] disabled:opacity-40 disabled:cursor-not-allowed";
+
 // Um Pokémon que já está salvo no banco (vem da página /times/[id]); campos opcionais podem vir null
 type SlotPokemon = {
   id: string;
@@ -167,7 +171,7 @@ return (
       {/* Área principal: lista de slots à esquerda, painel de edição à direita */}
       <div className="grid grid-cols-[220px_1fr] gap-6 mt-6">
         {/* Lista de slots (coluna da esquerda): caixa com fundo e um respiro interno */}
-        <div className="flex flex-col gap-2 bg-[#2c2a38] border border-[#3a3846] rounded-xl p-3">
+        <div className="flex flex-col gap-2 bg-[#262431] border border-[#3a3846] rounded-xl p-3">
           {SLOTS.map((slot) => {
             const active = slot === selectedSlot;
             const species = slots[slot].species;
@@ -179,10 +183,10 @@ return (
               <button
                 key={slot}
                 onClick={() => setSelectedSlot(slot)}
-                className={`flex items-center gap-3 text-left ${
+                className={`flex items-center gap-3 text-left rounded-lg p-2 border transition-colors ${
                   active
-                    ? "" /* estilo do slot selecionado */
-                    : "" /* estilo dos outros slots */
+                    ? "bg-[#3a3846] border-[#f3c642]" /* slot selecionado */
+                    : "border-transparent hover:bg-[#3a3846]/50" /* outros slots */
                 }`}
               >
                 {/* Espaço da miniatura: tem sempre o mesmo tamanho, com ou sem Pokémon */}
@@ -204,89 +208,97 @@ return (
         </div>
 
         {/* Painel de edição (coluna da direita): edita o slot selecionado */}
-        <div>
+        <div className="bg-[#2c2a38] border border-[#3a3846] rounded-xl p-6">
           <h2>Slot {selectedSlot}</h2>
 
-          {/* Rótulo do campo; block faz ele ocupar a linha toda, em cima do campo */}
-          <label className="block mt-4 mb-1">Pokémon</label>
+          {/* Rótulo do campo de Pokémon; block faz ele ocupar a linha toda, em cima do campo */}
+          <label className="block mt-4 mb-1 text-sm text-[#8b93a7]">Pokémon</label>
 
-          {/* Campo pesquisável; o key reinicia o texto do campo ao trocar de slot */}
+          {/* Campo pesquisável; ao esvaziar o nome, os campos do slot são zerados */}
           <PokemonCombobox
             key={selectedSlot}
             options={pokemonOptions}
             value={selectedSpecies}
-            onChange={(name) => updateSlot(selectedSlot, { species: name })}
+            onChange={(name) =>
+              updateSlot(
+                selectedSlot,
+                name === ""
+                  ? { species: "", nickname: "", shownNickname: "", nature: "", teraType: "" }
+                  : { species: name }
+              )
+            }
           />
 
-          {/* Tudo abaixo só aparece depois que o slot tem um Pokémon escolhido */}
-          {selectedSpecies && (
-            <>
-              {/* Confirmação visual: sprite grande e nome do Pokémon escolhido */}
-              <div className="flex items-center gap-4 mt-4">
+          {/* Área do sprite: tem sempre a mesma altura (h-24), com ou sem Pokémon, para a caixa dos campos não pular */}
+          <div className="flex items-center gap-4 mt-4 h-24">
+            {/* O conteúdo só aparece quando o slot tem Pokémon escolhido */}
+            {selectedSpecies && (
+              <>
+                {/* Sprite grande, ou um "?" se o nome não tem imagem */}
                 {selectedSprite ? (
                   <img src={selectedSprite} alt="" className="w-24 h-24" />
                 ) : (
                   <div className="w-24 h-24 flex items-center justify-center">?</div>
                 )}
 
+                {/* Nome do Pokémon escolhido */}
                 <p>{selectedSpecies}</p>
-              </div>
+              </>
+            )}
+          </div>
 
-              {/* Campos do Pokémon: caixa com fundo, grade de 2 colunas */}
-              <div className="grid grid-cols-2 gap-4 mt-6 max-w-lg bg-[#2c2a38] border border-[#3a3846] rounded-xl p-4">
-                {/* Apelido: ocupa as duas colunas */}
-                <div className="col-span-2">
-                  <label className="block mb-1">Apelido</label>
-                    <input
-                      className="w-full"
-                      maxLength={12}
-                      placeholder="Opcional"
-                      value={current.nickname}
-                      onChange={(e) => updateSlot(selectedSlot, { nickname: e.target.value })}
-                      onBlur={(e) => syncShownNickname(selectedSlot, e.target.value)}
-                    />
-                </div>
+          {/* Campos do Pokémon: SEMPRE visíveis, mas só editáveis quando o slot tem Pokémon */}
+          <div className="grid grid-cols-2 gap-4 mt-6 max-w-lg bg-[#1f1d28] border border-[#3a3846] rounded-xl p-4">
+            {/* Apelido: ocupa as duas colunas */}
+            <div className="col-span-2">
+              <label className="block mb-1 text-sm text-[#8b93a7]">Apelido</label>
+              <input
+                className={fieldClass}
+                maxLength={12}
+                placeholder="Opcional"
+                disabled={!selectedSpecies}
+                value={current.nickname}
+                onChange={(e) => updateSlot(selectedSlot, { nickname: e.target.value })}
+                onBlur={(e) => syncShownNickname(selectedSlot, e.target.value)}
+              />
+            </div>
 
-                {/* Nature: menu suspenso com as 25 opções */}
-                <div>
-                  <label className="block mb-1">Nature</label>
-                  <select
-                    className="w-full"
-                    value={current.nature}
-                    onChange={(e) =>
-                      updateSlot(selectedSlot, { nature: e.target.value })
-                    }
-                  >
-                    <option value="">Escolha...</option>
-                    {NATURES.map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {/* Nature: menu suspenso com as 25 opções */}
+            <div>
+              <label className="block mb-1 text-sm text-[#8b93a7]">Nature</label>
+              <select
+                className={fieldClass}
+                disabled={!selectedSpecies}
+                value={current.nature}
+                onChange={(e) => updateSlot(selectedSlot, { nature: e.target.value })}
+              >
+                <option value="">Escolha...</option>
+                {NATURES.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                {/* Tera type: menu suspenso com as 19 opções */}
-                <div>
-                  <label className="block mb-1">Tera type</label>
-                  <select
-                    className="w-full"
-                    value={current.teraType}
-                    onChange={(e) =>
-                      updateSlot(selectedSlot, { teraType: e.target.value })
-                    }
-                  >
-                    <option value="">Escolha...</option>
-                    {TERA_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </>
-          )}
+            {/* Tera type: menu suspenso com as 19 opções */}
+            <div>
+              <label className="block mb-1 text-sm text-[#8b93a7]">Tera type</label>
+              <select
+                className={fieldClass}
+                disabled={!selectedSpecies}
+                value={current.teraType}
+                onChange={(e) => updateSlot(selectedSlot, { teraType: e.target.value })}
+              >
+                <option value="">Escolha...</option>
+                {TERA_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
