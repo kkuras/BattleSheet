@@ -26,7 +26,7 @@ export default async function TeamPage({
     // Pokémon já salvos nesse time, na ordem dos slots
     const { data: pokemons } = await supabase
         .from("team_pokemons")
-        .select("id, slot, species, nickname, nature, tera_type")
+        .select("id, slot, species, nickname, nature, tera_type, evs, ivs")
         .eq("team_id", team.id)
         .order("slot", { ascending: true });
 

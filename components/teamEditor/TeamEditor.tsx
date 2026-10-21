@@ -4,12 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import type { PokemonOption } from "@/lib/pokeapi";
-import { NATURES, TERA_TYPES } from "@/lib/pokemonData";
+import {
+  NATURES,
+  TERA_TYPES,
+  STATS,
+  STAT_RULES,
+  defaultEvs,
+  defaultIvs,
+  evTotal,
+  type StatKey,
+  type StatSpread,
+} from "@/lib/pokemonData";
 import PokemonCombobox from "./PokemonCombobox";
-
-// Estilo compartilhado dos campos (apelido, nature, tera type); o disabled: deixa o campo apagado
-const fieldClass =
-  "w-full bg-[#2c2a38] border border-[#4a4757] rounded px-3 py-2 text-[#e8eaed] focus:outline-none focus:border-[#f3c642] disabled:opacity-40 disabled:cursor-not-allowed";
 
 // Um Pokémon que já está salvo no banco (vem da página /times/[id]); campos opcionais podem vir null
 type SlotPokemon = {
@@ -19,6 +25,8 @@ type SlotPokemon = {
   nickname: string | null;
   nature: string | null;
   tera_type: string | null;
+  evs: Partial<StatSpread> | null;
+  ivs: Partial<StatSpread> | null;
 };
 
 // Os dados de um slot enquanto você edita; texto vazio ("") significa "não preenchido"
@@ -28,7 +36,9 @@ type SlotData = {
   shownNickname: string; // o apelido exibido na lista de slots (só atualiza ao sair do campo)
   nature: string;
   teraType: string;
-  // quando adicionar EVs, IVs, item etc., as chaves novas entram aqui
+  evs: StatSpread;
+  ivs: StatSpread;
+  // quando adicionar item, moves etc., as chaves novas entram aqui
 };
 
 type TeamEditorProps = {
@@ -39,7 +49,15 @@ type TeamEditorProps = {
 
 const SLOTS = [1, 2, 3, 4, 5, 6];
 
-// Monta o estado dos 6 slots a partir do que veio do banco (null vira texto vazio)
+// Estilo compartilhado dos campos de texto e menus; o disabled: deixa o campo apagado
+const fieldClass =
+  "w-full bg-[#2c2a38] border border-[#4a4757] rounded px-3 py-2 text-[#e8eaed] focus:outline-none focus:border-[#f3c642] disabled:opacity-40 disabled:cursor-not-allowed";
+
+// Estilo dos campos numéricos de EV e IV: padding menor e texto centralizado, para caberem 6 por linha
+const numberFieldClass =
+  "w-full min-w-0 bg-[#2c2a38] border border-[#4a4757] rounded px-1 py-2 text-center text-[#e8eaed] focus:outline-none focus:border-[#f3c642] disabled:opacity-40 disabled:cursor-not-allowed";
+
+// Monta o estado dos 6 slots a partir do que veio do banco (null vira texto vazio, {} vira o padrão)
 function buildSlots(pokemons: SlotPokemon[]): Record<number, SlotData> {
   const result: Record<number, SlotData> = {};
 
@@ -52,10 +70,18 @@ function buildSlots(pokemons: SlotPokemon[]): Record<number, SlotData> {
       shownNickname: found?.nickname ?? "",
       nature: found?.nature ?? "",
       teraType: found?.tera_type ?? "",
+      // o que falta no banco é completado com o valor padrão
+      evs: { ...defaultEvs(), ...(found?.evs ?? {}) },
+      ivs: { ...defaultIvs(), ...(found?.ivs ?? {}) },
     };
   }
 
   return result;
+}
+
+// Compara dois conjuntos de EVs ou IVs, stat por stat
+function sameSpread(a: StatSpread, b: StatSpread) {
+  return STATS.every((s) => a[s.key] === b[s.key]);
 }
 
 // Compara dois slots; num slot vazio, só importa que os dois estão vazios
@@ -66,7 +92,9 @@ function sameSlot(a: SlotData, b: SlotData) {
   return (
     a.nickname.trim() === b.nickname.trim() &&
     a.nature === b.nature &&
-    a.teraType === b.teraType
+    a.teraType === b.teraType &&
+    sameSpread(a.evs, b.evs) &&
+    sameSpread(a.ivs, b.ivs)
   );
 }
 
@@ -84,6 +112,9 @@ export default function TeamEditor({
 
   const router = useRouter();
   const supabase = createClient();
+
+  // Regras de EV e IV do modo atual (por enquanto só o Showdown)
+  const rules = STAT_RULES.showdown;
 
   // O que está salvo no banco agora, para comparar com o que está na tela
   const savedSlots = buildSlots(pokemons);
@@ -115,6 +146,29 @@ export default function TeamEditor({
   const selectedSpecies = current.species;
   const selectedSprite = getSprite(selectedSpecies);
 
+  // Troca o EV de um stat respeitando o limite por stat e o limite total
+  function setEv(stat: StatKey, raw: string) {
+    const typed = raw === "" ? 0 : Number(raw);
+    if (Number.isNaN(typed)) return;
+
+    // O que os outros stats já gastam; o que sobra do total é o teto deste campo
+    const othersTotal = evTotal(current.evs) - current.evs[stat];
+    const max = Math.min(rules.evMaxPerStat, rules.evMaxTotal - othersTotal);
+    const value = Math.max(0, Math.min(Math.floor(typed), max));
+
+    updateSlot(selectedSlot, { evs: { ...current.evs, [stat]: value } });
+  }
+
+  // Troca o IV de um stat, sempre entre 0 e o máximo
+  function setIv(stat: StatKey, raw: string) {
+    const typed = raw === "" ? 0 : Number(raw);
+    if (Number.isNaN(typed)) return;
+
+    const value = Math.max(0, Math.min(Math.floor(typed), rules.ivMax));
+
+    updateSlot(selectedSlot, { ivs: { ...current.ivs, [stat]: value } });
+  }
+
   // Salva o time inteiro: grava os slots com Pokémon e apaga os que ficaram vazios
   async function handleSave() {
     setSaving(true);
@@ -133,6 +187,8 @@ export default function TeamEditor({
         nickname: slots[slot].nickname.trim() || null,
         nature: slots[slot].nature || null,
         tera_type: slots[slot].teraType || null,
+        evs: slots[slot].evs,
+        ivs: slots[slot].ivs,
         updated_at: new Date().toISOString(),
       }));
 
@@ -165,12 +221,11 @@ export default function TeamEditor({
     setJustSaved(true);
     router.refresh();
   }
-
-return (
+ return (
     <div>
       {/* Área principal: lista de slots à esquerda, painel de edição à direita */}
       <div className="grid grid-cols-[220px_1fr] gap-6 mt-6">
-        {/* Lista de slots (coluna da esquerda): caixa com fundo e um respiro interno */}
+        {/* Lista de slots (coluna da esquerda) */}
         <div className="flex flex-col gap-2 bg-[#262431] border border-[#3a3846] rounded-xl p-3">
           {SLOTS.map((slot) => {
             const active = slot === selectedSlot;
@@ -197,11 +252,14 @@ return (
                     <span>{species ? "?" : ""}</span>
                   )}
                 </div>
-                  {/* Textos: número do slot e o nome mostrado (o apelido, se tiver; senão a espécie) */}
-                  <div>
-                    <span>Slot {slot}</span>
-                    <span className="block">{(species && (nickname || species)) || "Vazio"}</span>
-                  </div>
+
+                {/* Textos: número do slot e o nome mostrado (apelido, se tiver; senão a espécie) */}
+                <div>
+                  <span>Slot {slot}</span>
+                  <span className="block">
+                    {(species && (nickname || species)) || "Vazio"}
+                  </span>
+                </div>
               </button>
             );
           })}
@@ -214,7 +272,7 @@ return (
           {/* Rótulo do campo de Pokémon; block faz ele ocupar a linha toda, em cima do campo */}
           <label className="block mt-4 mb-1 text-sm text-[#8b93a7]">Pokémon</label>
 
-          {/* Campo pesquisável; ao esvaziar o nome, os campos do slot são zerados */}
+          {/* Campo pesquisável; ao esvaziar o nome, todos os campos do slot são zerados */}
           <PokemonCombobox
             key={selectedSlot}
             options={pokemonOptions}
@@ -223,7 +281,15 @@ return (
               updateSlot(
                 selectedSlot,
                 name === ""
-                  ? { species: "", nickname: "", shownNickname: "", nature: "", teraType: "" }
+                  ? {
+                      species: "",
+                      nickname: "",
+                      shownNickname: "",
+                      nature: "",
+                      teraType: "",
+                      evs: defaultEvs(),
+                      ivs: defaultIvs(),
+                    }
                   : { species: name }
               )
             }
@@ -258,7 +324,9 @@ return (
                 placeholder="Opcional"
                 disabled={!selectedSpecies}
                 value={current.nickname}
-                onChange={(e) => updateSlot(selectedSlot, { nickname: e.target.value })}
+                onChange={(e) =>
+                  updateSlot(selectedSlot, { nickname: e.target.value })
+                }
                 onBlur={(e) => syncShownNickname(selectedSlot, e.target.value)}
               />
             </div>
@@ -270,7 +338,9 @@ return (
                 className={fieldClass}
                 disabled={!selectedSpecies}
                 value={current.nature}
-                onChange={(e) => updateSlot(selectedSlot, { nature: e.target.value })}
+                onChange={(e) =>
+                  updateSlot(selectedSlot, { nature: e.target.value })
+                }
               >
                 <option value="">Escolha...</option>
                 {NATURES.map((n) => (
@@ -288,7 +358,9 @@ return (
                 className={fieldClass}
                 disabled={!selectedSpecies}
                 value={current.teraType}
-                onChange={(e) => updateSlot(selectedSlot, { teraType: e.target.value })}
+                onChange={(e) =>
+                  updateSlot(selectedSlot, { teraType: e.target.value })
+                }
               >
                 <option value="">Escolha...</option>
                 {TERA_TYPES.map((t) => (
@@ -298,6 +370,57 @@ return (
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Caixa de EVs e IVs: sempre visível, editável só com Pokémon escolhido */}
+          <div className="mt-6 max-w-xl bg-[#1f1d28] border border-[#3a3846] rounded-xl p-4">
+            {/* Grade: 1 coluna para o nome da linha + 6 colunas, uma para cada stat */}
+            <div className="grid grid-cols-[auto_repeat(6,minmax(0,1fr))] gap-2 items-center">
+              {/* Cabeçalho: célula vazia no canto e o nome de cada stat */}
+              <span />
+              {STATS.map((s) => (
+                <span key={s.key} className="text-center text-sm text-[#8b93a7]">
+                  {s.label}
+                </span>
+              ))}
+
+              {/* Linha de EVs */}
+              <span className="text-sm text-[#8b93a7]">EVs</span>
+              {STATS.map((s) => (
+                <input
+                  key={s.key}
+                  type="number"
+                  min={0}
+                  max={rules.evMaxPerStat}
+                  className={numberFieldClass}
+                  disabled={!selectedSpecies}
+                  value={current.evs[s.key]}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setEv(s.key, e.target.value)}
+                />
+              ))}
+
+              {/* Linha de IVs */}
+              <span className="text-sm text-[#8b93a7]">IVs</span>
+              {STATS.map((s) => (
+                <input
+                  key={s.key}
+                  type="number"
+                  min={0}
+                  max={rules.ivMax}
+                  className={numberFieldClass}
+                  disabled={!selectedSpecies}
+                  value={current.ivs[s.key]}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setIv(s.key, e.target.value)}
+                />
+              ))}
+            </div>
+
+            {/* Contador de EVs usados em relação ao total permitido */}
+            <p className="mt-3 text-sm text-[#8b93a7]">
+              EVs usados: {evTotal(current.evs)} / {rules.evMaxTotal}
+            </p>
           </div>
         </div>
       </div>
