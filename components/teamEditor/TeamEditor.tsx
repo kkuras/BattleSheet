@@ -7,6 +7,7 @@ import type { PokemonOption } from "@/lib/pokeapi";
 import {
   NATURES,
   TERA_TYPES,
+  GENDER_OPTIONS,
   STATS,
   STAT_RULES,
   defaultEvs,
@@ -25,6 +26,7 @@ type SlotPokemon = {
   nickname: string | null;
   nature: string | null;
   tera_type: string | null;
+  gender: string | null;
   evs: Partial<StatSpread> | null;
   ivs: Partial<StatSpread> | null;
 };
@@ -36,6 +38,7 @@ type SlotData = {
   shownNickname: string; // o apelido exibido na lista de slots (só atualiza ao sair do campo)
   nature: string;
   teraType: string;
+  gender: string;
   evs: StatSpread;
   ivs: StatSpread;
   // quando adicionar item, moves etc., as chaves novas entram aqui
@@ -70,6 +73,7 @@ function buildSlots(pokemons: SlotPokemon[]): Record<number, SlotData> {
       shownNickname: found?.nickname ?? "",
       nature: found?.nature ?? "",
       teraType: found?.tera_type ?? "",
+      gender: found?.gender ?? "",
       // o que falta no banco é completado com o valor padrão
       evs: { ...defaultEvs(), ...(found?.evs ?? {}) },
       ivs: { ...defaultIvs(), ...(found?.ivs ?? {}) },
@@ -93,6 +97,7 @@ function sameSlot(a: SlotData, b: SlotData) {
     a.nickname.trim() === b.nickname.trim() &&
     a.nature === b.nature &&
     a.teraType === b.teraType &&
+    a.gender === b.gender &&
     sameSpread(a.evs, b.evs) &&
     sameSpread(a.ivs, b.ivs)
   );
@@ -144,6 +149,7 @@ export default function TeamEditor({
       shownNickname: "",
       nature: "",
       teraType: "",
+      gender: "",
       evs: defaultEvs(),
       ivs: defaultIvs(),
     });
@@ -196,10 +202,10 @@ export default function TeamEditor({
         team_id: teamId,
         slot,
         species: slots[slot].species,
-        // texto vazio vira null no banco
         nickname: slots[slot].nickname.trim() || null,
         nature: slots[slot].nature || null,
         tera_type: slots[slot].teraType || null,
+        gender: slots[slot].gender || null,
         evs: slots[slot].evs,
         ivs: slots[slot].ivs,
         updated_at: new Date().toISOString(),
@@ -313,7 +319,8 @@ export default function TeamEditor({
                 <p>{selectedSpecies}</p>
               
                 {/* Botão para esvaziar o slot; o visual é com você */}
-                <button type="button" onClick={() => clearSlot(selectedSlot)}>
+                <button className="bg-[#1f1d28] border border-[#3a3846]" 
+                type="button" onClick={() => clearSlot(selectedSlot)}>
                   Remover Pokémon
                 </button>
               </>
@@ -376,6 +383,36 @@ export default function TeamEditor({
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Sexo: dois botões; clicar no que já está marcado desmarca */}
+            <div className="col-span-2">
+              <label className="block mb-1 text-sm text-[#8b93a7]">Sexo</label>
+
+              {/* Fileira com os dois botões, dividindo a largura */}
+              <div className="flex gap-2">
+                {GENDER_OPTIONS.map((g) => {
+                  const active = current.gender === g.value;
+
+                  return (
+                    <button
+                      key={g.value}
+                      type="button"
+                      disabled={!selectedSpecies}
+                      onClick={() =>
+                        updateSlot(selectedSlot, { gender: active ? "" : g.value })
+                      }
+                      className={`flex-1 rounded border px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed ${
+                        active
+                          ? "bg-[#3a3846] border-[#f3c642]" /* marcado */
+                          : "border-[#4a4757]" /* não marcado */
+                      }`}
+                    >
+                      {g.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

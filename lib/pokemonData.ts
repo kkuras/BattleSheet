@@ -49,3 +49,9 @@ export function defaultIvs(): StatSpread {
 export function evTotal(evs: StatSpread) {
   return STATS.reduce((sum, s) => sum + evs[s.key], 0);
 }
+
+// Opções de sexo: value é o que vai para o banco (como o Showdown escreve), label é o que aparece
+export const GENDER_OPTIONS = [
+  { value: "M", label: "♂ Macho" },
+  { value: "F", label: "♀ Fêmea" },
+] as const;
