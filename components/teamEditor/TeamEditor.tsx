@@ -136,6 +136,19 @@ export default function TeamEditor({
     }));
   }
 
+  // Esvazia um slot: remove o Pokémon e zera todos os campos dele
+  function clearSlot(slot: number) {
+    updateSlot(slot, {
+      species: "",
+      nickname: "",
+      shownNickname: "",
+      nature: "",
+      teraType: "",
+      evs: defaultEvs(),
+      ivs: defaultIvs(),
+    });
+  }
+
   // Devolve o sprite pelo nome; fica undefined se o nome não está na lista da PokéAPI
   function getSprite(species: string) {
     return pokemonOptions.find((o) => o.name === species)?.sprite;
@@ -270,28 +283,17 @@ export default function TeamEditor({
           <h2>Slot {selectedSlot}</h2>
 
           {/* Rótulo do campo de Pokémon; block faz ele ocupar a linha toda, em cima do campo */}
-          <label className="block mt-4 mb-1 text-sm text-[#8b93a7]">Pokémon</label>
+          <label className="block mt-4 mb-1 text-sm text-[#8b93a7]">Pokémon</label>   {/* não muda */}
 
-          {/* Campo pesquisável; ao esvaziar o nome, todos os campos do slot são zerados */}
+          {/* Campo pesquisável; o key reinicia o campo sempre que o Pokémon escolhido muda (trocar de slot, escolher ou remover) */}
           <PokemonCombobox
-            key={selectedSlot}
+            key={`${selectedSlot}-${selectedSpecies}`}
             options={pokemonOptions}
             value={selectedSpecies}
             onChange={(name) =>
-              updateSlot(
-                selectedSlot,
-                name === ""
-                  ? {
-                      species: "",
-                      nickname: "",
-                      shownNickname: "",
-                      nature: "",
-                      teraType: "",
-                      evs: defaultEvs(),
-                      ivs: defaultIvs(),
-                    }
-                  : { species: name }
-              )
+              name === ""
+                ? clearSlot(selectedSlot)
+                : updateSlot(selectedSlot, { species: name })
             }
           />
 
@@ -309,6 +311,11 @@ export default function TeamEditor({
 
                 {/* Nome do Pokémon escolhido */}
                 <p>{selectedSpecies}</p>
+              
+                {/* Botão para esvaziar o slot; o visual é com você */}
+                <button type="button" onClick={() => clearSlot(selectedSlot)}>
+                  Remover Pokémon
+                </button>
               </>
             )}
           </div>
@@ -374,46 +381,71 @@ export default function TeamEditor({
 
           {/* Caixa de EVs e IVs: sempre visível, editável só com Pokémon escolhido */}
           <div className="mt-6 max-w-xl bg-[#1f1d28] border border-[#3a3846] rounded-xl p-4">
-            {/* Grade: 1 coluna para o nome da linha + 6 colunas, uma para cada stat */}
-            <div className="grid grid-cols-[auto_repeat(6,minmax(0,1fr))] gap-2 items-center">
-              {/* Cabeçalho: célula vazia no canto e o nome de cada stat */}
+            {/* Cabeçalho: "EVs" sobre o slider e o número dos EVs, "IVs" sobre os dos IVs */}
+            <div className="grid grid-cols-[3rem_minmax(0,1fr)_4rem_minmax(0,1fr)_4rem] gap-3 items-center mb-2">
               <span />
-              {STATS.map((s) => (
-                <span key={s.key} className="text-center text-sm text-[#8b93a7]">
-                  {s.label}
-                </span>
-              ))}
+              <span className="col-span-2 text-sm text-[#8b93a7]">EVs</span>
+              <span className="col-span-2 text-sm text-[#8b93a7]">IVs</span>
+            </div>
 
-              {/* Linha de EVs */}
-              <span className="text-sm text-[#8b93a7]">EVs</span>
+            {/* Uma linha por stat: nome, slider e número de EV, slider e número de IV */}
+            <div className="flex flex-col gap-2">
               {STATS.map((s) => (
-                <input
+                <div
                   key={s.key}
-                  type="number"
-                  min={0}
-                  max={rules.evMaxPerStat}
-                  className={numberFieldClass}
-                  disabled={!selectedSpecies}
-                  value={current.evs[s.key]}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => setEv(s.key, e.target.value)}
-                />
-              ))}
+                  className="grid grid-cols-[3rem_minmax(0,1fr)_4rem_minmax(0,1fr)_4rem] gap-3 items-center"
+                >
+                  {/* Nome do stat */}
+                  <span className="text-sm text-[#8b93a7]">{s.label}</span>
 
-              {/* Linha de IVs */}
-              <span className="text-sm text-[#8b93a7]">IVs</span>
-              {STATS.map((s) => (
-                <input
-                  key={s.key}
-                  type="number"
-                  min={0}
-                  max={rules.ivMax}
-                  className={numberFieldClass}
-                  disabled={!selectedSpecies}
-                  value={current.ivs[s.key]}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => setIv(s.key, e.target.value)}
-                />
+                  {/* Slider de EV: anda de 4 em 4 e trava no que sobra do total */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={rules.evMaxPerStat}
+                    step={4}
+                    className="w-full accent-[#f3c642] disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled={!selectedSpecies}
+                    value={current.evs[s.key]}
+                    onChange={(e) => setEv(s.key, e.target.value)}
+                  />
+
+                  {/* Número de EV: aceita qualquer valor dentro do limite */}
+                  <input
+                    type="number"
+                    min={0}
+                    max={rules.evMaxPerStat}
+                    className={numberFieldClass}
+                    disabled={!selectedSpecies}
+                    value={current.evs[s.key]}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setEv(s.key, e.target.value)}
+                  />
+
+                  {/* Slider de IV */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={rules.ivMax}
+                    step={1}
+                    className="w-full accent-[#f3c642] disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled={!selectedSpecies}
+                    value={current.ivs[s.key]}
+                    onChange={(e) => setIv(s.key, e.target.value)}
+                  />
+
+                  {/* Número de IV */}
+                  <input
+                    type="number"
+                    min={0}
+                    max={rules.ivMax}
+                    className={numberFieldClass}
+                    disabled={!selectedSpecies}
+                    value={current.ivs[s.key]}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setIv(s.key, e.target.value)}
+                  />
+                </div>
               ))}
             </div>
 
