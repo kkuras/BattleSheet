@@ -2,6 +2,7 @@ export type PokemonOption = {
   id: number;
   name: string;
   sprite: string;
+  femaleSprite: string;
 };
 
 export async function getPokemonList(): Promise<PokemonOption[]> {
@@ -23,6 +24,7 @@ export async function getPokemonList(): Promise<PokemonOption[]> {
             id,
             name: p.name,
             sprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+            femaleSprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/${id}.png`,
         };
     });
 }

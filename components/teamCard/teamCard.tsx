@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import PokemonSprite from "@/components/PokemonSprites/PokemonSprite";   // novo
+
 
 // Um slot do card: Pokémon com sprite (ou sem imagem), ou null se o slot está vazio
-type CardSlot = { species: string; sprite: string | null } | null;
+type CardSlot = { species: string; sprite: string | null; fallback: string | null } | null;
 
 type TeamCardProps = {
   id: string;
@@ -138,7 +140,12 @@ export default function TeamCard({ id, name, slots }: TeamCardProps) {
           <div key={i} className="aspect-square flex items-center justify-center border-amber-100 border">
             {slot?.sprite ? (
               /* Sprite do Pokémon, preenchendo o quadrado */
-              <img src={slot.sprite} alt={slot.species} className="w-full h-full" />
+              <PokemonSprite
+                src={slot.sprite}
+                fallbackSrc={slot.fallback ?? undefined}
+                alt={slot.species}
+                className="w-full h-full"
+              />
             ) : slot ? (
               /* Pokémon sem imagem na lista (nome customizado) */
               <span>?</span>

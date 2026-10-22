@@ -18,12 +18,12 @@ export default async function TimesPage() {
     
   // Todos os Pokémon salvos nos times deste usuário, numa consulta só
 const teamIds = (teams ?? []).map((t) => t.id);
-let savedPokemons: { team_id: string; slot: number; species: string }[] = [];
+let savedPokemons: { team_id: string; slot: number; species: string; gender: string | null }[] = [];
 
 if (teamIds.length > 0) {
   const { data } = await supabase
     .from("team_pokemons")
-    .select("team_id, slot, species")
+    .select("team_id, slot, species, gender")
     .in("team_id", teamIds);
 
   savedPokemons = data ?? [];
@@ -31,9 +31,7 @@ if (teamIds.length > 0) {
 
 // Tabela de consulta: nome do Pokémon -> endereço do sprite
 const options = await getPokemonList();
-const spriteByName = new Map(
-  options.map((o) => [o.name, o.sprite] as [string, string])
-);
+const optionByName = new Map(options.map((o) => [o.name, o] as const));
 
 // Monta os 6 slots de um time já com o sprite resolvido (null = slot vazio)
 function buildCardSlots(teamId: string) {
@@ -44,9 +42,14 @@ function buildCardSlots(teamId: string) {
 
     if (!found) return null;
 
+    const option = optionByName.get(found.species);
+    const female = found.gender === "F";
+
     return {
       species: found.species,
-      sprite: spriteByName.get(found.species) ?? null,
+      // com sexo F, usa a imagem feminina e deixa a normal de reserva
+      sprite: (female ? option?.femaleSprite : option?.sprite) ?? null,
+      fallback: female ? (option?.sprite ?? null) : null,
     };
   });
 }

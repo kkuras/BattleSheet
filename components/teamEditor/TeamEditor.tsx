@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import PokemonSprite from "@/components/PokemonSprites/PokemonSprite";   // novo
 import {
   getAllowedGenders,
   type AllowedGenders,
@@ -184,15 +185,20 @@ export default function TeamEditor({
     );
   }
 
-  // Devolve o sprite pelo nome; fica undefined se o nome não está na lista da PokéAPI
-  function getSprite(species: string) {
-    return pokemonOptions.find((o) => o.name === species)?.sprite;
+  // Devolve a imagem do Pokémon: a feminina (com a normal de reserva) se o sexo for F; senão a normal
+  function getSprites(species: string, gender: string) {
+    const option = pokemonOptions.find((o) => o.name === species);
+    if (!option) return undefined;
+
+    return gender === "F"
+      ? { src: option.femaleSprite, fallback: option.sprite }
+      : { src: option.sprite, fallback: undefined };
   }
 
   // Dados do slot que está aberto no painel da direita
   const current = slots[selectedSlot];
   const selectedSpecies = current.species;
-  const selectedSprite = getSprite(selectedSpecies);
+  const selectedSprites = getSprites(selectedSpecies, current.gender);   // era: const selectedSprite = getSprite(selectedSpecies);
 
    // Sexos permitidos do Pokémon do slot aberto (undefined enquanto não chegou ou se a consulta falhou)
   const allowedGenders: AllowedGenders | undefined = selectedSpecies
@@ -295,7 +301,7 @@ export default function TeamEditor({
             const active = slot === selectedSlot;
             const species = slots[slot].species;
             const nickname = slots[slot].shownNickname.trim();
-            const sprite = getSprite(species);
+            const sprites = getSprites(species, slots[slot].gender);
 
             return (
               /* Botão de um slot: miniatura à esquerda, textos à direita */
@@ -310,8 +316,12 @@ export default function TeamEditor({
               >
                 {/* Espaço da miniatura: tem sempre o mesmo tamanho, com ou sem Pokémon */}
                 <div className="w-12 h-12 shrink-0 flex items-center justify-center">
-                  {sprite ? (
-                    <img src={sprite} alt="" className="w-12 h-12" />
+                  {sprites ? (
+                    <PokemonSprite
+                      src={sprites.src}
+                      fallbackSrc={sprites.fallback}
+                      className="w-12 h-12"
+                    />
                   ) : (
                     <span>{species ? "?" : ""}</span>
                   )}
@@ -352,8 +362,12 @@ export default function TeamEditor({
             {selectedSpecies && (
               <>
                 {/* Sprite grande, ou um "?" se o nome não tem imagem */}
-                {selectedSprite ? (
-                  <img src={selectedSprite} alt="" className="w-24 h-24" />
+                {selectedSprites ? (
+                  <PokemonSprite
+                    src={selectedSprites.src}
+                    fallbackSrc={selectedSprites.fallback}
+                    className="w-24 h-24"
+                  />
                 ) : (
                   <div className="w-24 h-24 flex items-center justify-center">?</div>
                 )}
