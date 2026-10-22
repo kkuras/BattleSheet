@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import type { PokemonOption } from "@/lib/pokeapi";
+import {
+  getAllowedGenders,
+  type AllowedGenders,
+  type PokemonOption,
+} from "@/lib/pokeapi"; 
 import {
   NATURES,
   TERA_TYPES,
@@ -103,6 +107,14 @@ function sameSlot(a: SlotData, b: SlotData) {
   );
 }
 
+// Enquanto a consulta não chega (ou se ela falhar), os dois sexos ficam liberados
+const BOTH_GENDERS: AllowedGenders = ["M", "F"];
+
+// Sexo que um Pokémon recebe ao ser escolhido: o primeiro permitido (macho, se tiver os dois); nenhum se não tiver sexo
+function defaultGender(allowed: AllowedGenders | null) {
+  return allowed?.[0] ?? "";
+}
+
 
 export default function TeamEditor({
   teamId,
@@ -114,6 +126,8 @@ export default function TeamEditor({
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  // Sexos permitidos já descobertos de cada Pokémon (nome -> lista)   (novo)
+  const [allowedByPokemon, setAllowedByPokemon] = useState<Record<string, AllowedGenders>>({});
 
   const router = useRouter();
   const supabase = createClient();
@@ -155,6 +169,21 @@ export default function TeamEditor({
     });
   }
 
+  // Escolhe um Pokémon no slot e já define o sexo padrão conforme a espécie
+  async function pickPokemon(slot: number, name: string) {
+    // troca o Pokémon na hora, sem esperar a consulta
+    updateSlot(slot, { species: name, gender: "" });
+
+    const allowed = await getAllowedGenders(name);
+
+    // só aplica o sexo se o slot ainda tem esse Pokémon (a pessoa pode ter trocado nesse meio tempo)
+    setSlots((prev) =>
+      prev[slot].species === name
+        ? { ...prev, [slot]: { ...prev[slot], gender: defaultGender(allowed) } }
+        : prev
+    );
+  }
+
   // Devolve o sprite pelo nome; fica undefined se o nome não está na lista da PokéAPI
   function getSprite(species: string) {
     return pokemonOptions.find((o) => o.name === species)?.sprite;
@@ -164,6 +193,22 @@ export default function TeamEditor({
   const current = slots[selectedSlot];
   const selectedSpecies = current.species;
   const selectedSprite = getSprite(selectedSpecies);
+
+   // Sexos permitidos do Pokémon do slot aberto (undefined enquanto não chegou ou se a consulta falhou)
+  const allowedGenders: AllowedGenders | undefined = selectedSpecies
+    ? allowedByPokemon[selectedSpecies]
+    : undefined;
+
+  // Ao abrir um slot com Pokémon, busca os sexos dele se ainda não tiver
+  useEffect(() => {
+    if (!selectedSpecies || allowedByPokemon[selectedSpecies]) return;
+
+    getAllowedGenders(selectedSpecies).then((allowed) => {
+      if (allowed) {
+        setAllowedByPokemon((prev) => ({ ...prev, [selectedSpecies]: allowed }));
+      }
+    });
+  }, [selectedSpecies, allowedByPokemon]);
 
   // Troca o EV de um stat respeitando o limite por stat e o limite total
   function setEv(stat: StatKey, raw: string) {
@@ -297,9 +342,7 @@ export default function TeamEditor({
             options={pokemonOptions}
             value={selectedSpecies}
             onChange={(name) =>
-              name === ""
-                ? clearSlot(selectedSlot)
-                : updateSlot(selectedSlot, { species: name })
+              name === "" ? clearSlot(selectedSlot) : pickPokemon(selectedSlot, name)
             }
           />
 
@@ -385,7 +428,7 @@ export default function TeamEditor({
               </select>
             </div>
 
-            {/* Sexo: dois botões; clicar no que já está marcado desmarca */}
+             {/* Sexo: dois botões; só ficam ativos os sexos que a espécie pode ter */}
             <div className="col-span-2">
               <label className="block mb-1 text-sm text-[#8b93a7]">Sexo</label>
 
@@ -394,14 +437,17 @@ export default function TeamEditor({
                 {GENDER_OPTIONS.map((g) => {
                   const active = current.gender === g.value;
 
+                  // O botão só fica ativo se o sexo está na lista de permitidos
+                  const allowed =
+                    !!selectedSpecies &&
+                    (allowedGenders ?? BOTH_GENDERS).includes(g.value);
+
                   return (
                     <button
                       key={g.value}
                       type="button"
-                      disabled={!selectedSpecies}
-                      onClick={() =>
-                        updateSlot(selectedSlot, { gender: active ? "" : g.value })
-                      }
+                      disabled={!allowed}
+                      onClick={() => updateSlot(selectedSlot, { gender: g.value })}
                       className={`flex-1 rounded border px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed ${
                         active
                           ? "bg-[#3a3846] border-[#f3c642]" /* marcado */
