@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import PokemonSprite from "@/components/PokemonSprites/PokemonSprite";   // novo
 import {
   getAllowedGenders,
+  spriteSources,
   type AllowedGenders,
   type PokemonOption,
 } from "@/lib/pokeapi"; 
+import PokemonSprite from "@/components/pokemonSprites/PokemonSprite";
+
 import {
   NATURES,
   TERA_TYPES,
@@ -185,20 +187,16 @@ export default function TeamEditor({
     );
   }
 
-  // Devolve a imagem do Pokémon: a feminina (com a normal de reserva) se o sexo for F; senão a normal
-  function getSprites(species: string, gender: string) {
+  // Lista de imagens do Pokémon (a primeira que existir é mostrada), já considerando o sexo; undefined se o nome não está na lista
+  function getSources(species: string, gender: string) {
     const option = pokemonOptions.find((o) => o.name === species);
-    if (!option) return undefined;
-
-    return gender === "F"
-      ? { src: option.femaleSprite, fallback: option.sprite }
-      : { src: option.sprite, fallback: undefined };
+    return option ? spriteSources(option.id, gender) : undefined;
   }
 
   // Dados do slot que está aberto no painel da direita
   const current = slots[selectedSlot];
   const selectedSpecies = current.species;
-  const selectedSprites = getSprites(selectedSpecies, current.gender);   // era: const selectedSprite = getSprite(selectedSpecies);
+  const selectedSources = getSources(selectedSpecies, current.gender);
 
    // Sexos permitidos do Pokémon do slot aberto (undefined enquanto não chegou ou se a consulta falhou)
   const allowedGenders: AllowedGenders | undefined = selectedSpecies
@@ -301,7 +299,7 @@ export default function TeamEditor({
             const active = slot === selectedSlot;
             const species = slots[slot].species;
             const nickname = slots[slot].shownNickname.trim();
-            const sprites = getSprites(species, slots[slot].gender);
+            const sources = getSources(species, slots[slot].gender);
 
             return (
               /* Botão de um slot: miniatura à esquerda, textos à direita */
@@ -316,12 +314,8 @@ export default function TeamEditor({
               >
                 {/* Espaço da miniatura: tem sempre o mesmo tamanho, com ou sem Pokémon */}
                 <div className="w-12 h-12 shrink-0 flex items-center justify-center">
-                  {sprites ? (
-                    <PokemonSprite
-                      src={sprites.src}
-                      fallbackSrc={sprites.fallback}
-                      className="w-12 h-12"
-                    />
+                  {sources ? (
+                    <PokemonSprite sources={sources} className="w-12 h-12" />
                   ) : (
                     <span>{species ? "?" : ""}</span>
                   )}
@@ -361,13 +355,9 @@ export default function TeamEditor({
             {/* O conteúdo só aparece quando o slot tem Pokémon escolhido */}
             {selectedSpecies && (
               <>
-                {/* Sprite grande, ou um "?" se o nome não tem imagem */}
-                {selectedSprites ? (
-                  <PokemonSprite
-                    src={selectedSprites.src}
-                    fallbackSrc={selectedSprites.fallback}
-                    className="w-24 h-24"
-                  />
+                {/* Sprite grande, ou um "?" se o nome não está na lista */}
+                {selectedSources ? (
+                  <PokemonSprite sources={selectedSources} className="w-24 h-24" />
                 ) : (
                   <div className="w-24 h-24 flex items-center justify-center">?</div>
                 )}

@@ -3,30 +3,33 @@
 import { useState } from "react";
 
 type PokemonSpriteProps = {
-  src: string;
-  fallbackSrc?: string;
+  sources: string[];
   alt?: string;
   className?: string;
 };
 
 export default function PokemonSprite({
-  src,
-  fallbackSrc,
+  sources,
   alt = "",
   className,
 }: PokemonSpriteProps) {
-  // Guarda qual endereço já falhou; se mudar o src, o aviso de falha deixa de valer sozinho
-  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  // Identifica esta lista de imagens; se a lista mudar, a contagem de falhas recomeça
+  const key = sources.join("|");
 
-  // Se a principal falhou e existe reserva, mostra a reserva
-  const finalSrc = failedSrc === src && fallbackSrc ? fallbackSrc : src;
+  // Quantas imagens já falharam para esta lista
+  const [failure, setFailure] = useState({ key: "", count: 0 });
+  const failedCount = failure.key === key ? failure.count : 0;
+
+  // Mostra a primeira que ainda não falhou (a última, se todas falharam)
+  const src = sources[Math.min(failedCount, sources.length - 1)];
 
   return (
     <img
-      src={finalSrc}
+      src={src}
       alt={alt}
+      loading="lazy"
       className={className}
-      onError={() => setFailedSrc(src)}
+      onError={() => setFailure({ key, count: failedCount + 1 })}
     />
   );
 }

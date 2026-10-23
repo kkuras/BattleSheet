@@ -1,8 +1,6 @@
 export type PokemonOption = {
   id: number;
   name: string;
-  sprite: string;
-  femaleSprite: string;
 };
 
 export async function getPokemonList(): Promise<PokemonOption[]> {
@@ -17,15 +15,9 @@ export async function getPokemonList(): Promise<PokemonOption[]> {
     const data: { results: { name: string; url: string }[] } = await res.json();
 
     return data.results.map((p) => {
-        const id = Number(p.url.split("/").filter(Boolean).pop());
+      const id = Number(p.url.split("/").filter(Boolean).pop());   // não muda
 
-
-        return {
-            id,
-            name: p.name,
-            sprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
-            femaleSprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/${id}.png`,
-        };
+      return { id, name: p.name };
     });
 }
 
@@ -75,4 +67,18 @@ export function getAllowedGenders(name: string): Promise<AllowedGenders | null> 
   });
 
   return request;
+}
+
+const SPRITES_BASE =
+  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
+
+// Imagens para tentar, em ordem: HOME (3D, a mais moderna), arte oficial e, por último, o sprite pixelado
+export function spriteSources(id: number, gender = ""): string[] {
+  const home = `${SPRITES_BASE}/other/home/${id}.png`;
+  const homeFemale = `${SPRITES_BASE}/other/home/female/${id}.png`;
+  const artwork = `${SPRITES_BASE}/other/official-artwork/${id}.png`;
+  const pixel = `${SPRITES_BASE}/${id}.png`;
+
+  // Com sexo F tenta primeiro a versão feminina (que só existe para algumas espécies)
+  return gender === "F" ? [homeFemale, home, artwork, pixel] : [home, artwork, pixel];
 }

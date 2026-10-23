@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import TeamCard from "@/components/teamCard/teamCard";
 import Link from "next/link";
-import { getPokemonList } from "@/lib/pokeapi";
+import { getPokemonList, spriteSources } from "@/lib/pokeapi";
 
 export default async function TimesPage() {
   const supabase = await createClient();
@@ -29,9 +29,10 @@ if (teamIds.length > 0) {
   savedPokemons = data ?? [];
 }
 
-// Tabela de consulta: nome do Pokémon -> endereço do sprite
+// Lista de Pokémon da PokéAPI (fica em cache no servidor por 24 horas)   ← LINHA NOVA
 const options = await getPokemonList();
-const optionByName = new Map(options.map((o) => [o.name, o] as const));
+// Tabela de consulta: nome do Pokémon -> número dele
+const idByName = new Map(options.map((o) => [o.name, o.id] as const)); 
 
 // Monta os 6 slots de um time já com o sprite resolvido (null = slot vazio)
 function buildCardSlots(teamId: string) {
@@ -42,14 +43,12 @@ function buildCardSlots(teamId: string) {
 
     if (!found) return null;
 
-    const option = optionByName.get(found.species);
-    const female = found.gender === "F";
+    const id = idByName.get(found.species);
 
     return {
       species: found.species,
-      // com sexo F, usa a imagem feminina e deixa a normal de reserva
-      sprite: (female ? option?.femaleSprite : option?.sprite) ?? null,
-      fallback: female ? (option?.sprite ?? null) : null,
+      // lista de imagens para tentar, já com o sexo; null se o nome não está na lista
+      sources: id ? spriteSources(id, found.gender ?? "") : null,
     };
   });
 }
