@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import ProfileMenu from "../ProfileMenu/ProfileMenu";
+import ProfileMenu from "../profileMenu/ProfileMenu";
 
 export default async function Header() {
   const supabase = await createClient();

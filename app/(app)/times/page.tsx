@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import TeamCard from "@/components/teamCard/teamCard";
 import Link from "next/link";
-import { getPokemonList } from "@/lib/pokeapi";
+import { getPokemonList, spriteSources } from "@/lib/pokeapi";
 
 export default async function TimesPage() {
   const supabase = await createClient();
@@ -18,22 +18,21 @@ export default async function TimesPage() {
     
   // Todos os Pokémon salvos nos times deste usuário, numa consulta só
 const teamIds = (teams ?? []).map((t) => t.id);
-let savedPokemons: { team_id: string; slot: number; species: string }[] = [];
+let savedPokemons: { team_id: string; slot: number; species: string; gender: string | null }[] = [];
 
 if (teamIds.length > 0) {
   const { data } = await supabase
     .from("team_pokemons")
-    .select("team_id, slot, species")
+    .select("team_id, slot, species, gender")
     .in("team_id", teamIds);
 
   savedPokemons = data ?? [];
 }
 
-// Tabela de consulta: nome do Pokémon -> endereço do sprite
+// Lista de Pokémon da PokéAPI (fica em cache no servidor por 24 horas)   ← LINHA NOVA
 const options = await getPokemonList();
-const spriteByName = new Map(
-  options.map((o) => [o.name, o.sprite] as [string, string])
-);
+// Tabela de consulta: nome do Pokémon -> número dele
+const idByName = new Map(options.map((o) => [o.name, o.id] as const)); 
 
 // Monta os 6 slots de um time já com o sprite resolvido (null = slot vazio)
 function buildCardSlots(teamId: string) {
@@ -44,9 +43,12 @@ function buildCardSlots(teamId: string) {
 
     if (!found) return null;
 
+    const id = idByName.get(found.species);
+
     return {
       species: found.species,
-      sprite: spriteByName.get(found.species) ?? null,
+      // lista de imagens para tentar, já com o sexo; null se o nome não está na lista
+      sources: id ? spriteSources(id, found.gender ?? "") : null,
     };
   });
 }

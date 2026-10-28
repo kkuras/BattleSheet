@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { normalizeName, type PokemonOption } from "@/lib/pokeapi";
+import { normalizeName, spriteSources, type PokemonOption } from "@/lib/pokeapi";
+import PokemonSprite from "@/components/pokemonSprites/PokemonSprite";
 
 type PokemonComboboxProps = {
   options: PokemonOption[];
@@ -86,7 +87,7 @@ export default function PokemonCombobox({
                 }}
                 className="w-full flex items-center gap-3 text-left"
               >
-                <img src={o.sprite} alt="" className="w-14 h-14" />
+                <PokemonSprite sources={spriteSources(o.id)} className="w-14 h-14" />   {/* era: <img src={o.sprite} ... /> */}
                 {o.name}
               </button>
             </li>
