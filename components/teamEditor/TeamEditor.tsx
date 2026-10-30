@@ -9,7 +9,7 @@ import {
   type AllowedGenders,
   type PokemonOption,
 } from "@/lib/pokeapi"; 
-import PokemonSprite from "@/components/pokemonSprites/PokemonSprite";
+import PokemonSprite from "@/components/pokemonSprites/PokemonSprites";
 
 import {
   NATURES,

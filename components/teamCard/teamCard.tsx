@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import PokemonSprite from "@/components/pokemonSprites/PokemonSprite";
+import PokemonSprite from "@/components/pokemonSprites/PokemonSprites";
 
 
 // Um slot do card: Pokémon com sprite (ou sem imagem), ou null se o slot está vazio
