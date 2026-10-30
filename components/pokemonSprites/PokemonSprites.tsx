@@ -8,7 +8,7 @@ type PokemonSpriteProps = {
   className?: string;
 };
 
-export default function PokemonSprite({
+export default function pokemonSprites({
   sources,
   alt = "",
   className,

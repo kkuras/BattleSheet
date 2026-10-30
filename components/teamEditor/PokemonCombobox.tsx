@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { normalizeName, spriteSources, type PokemonOption } from "@/lib/pokeapi";
-import PokemonSprite from "@/components/pokemonSprites/PokemonSprite";
+import PokemonSprite from "@/components/pokemonSprites/PokemonSprites";
 
 type PokemonComboboxProps = {
   options: PokemonOption[];
